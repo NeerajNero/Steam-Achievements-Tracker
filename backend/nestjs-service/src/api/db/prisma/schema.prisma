@@ -1,0 +1,195 @@
+// Check constraints and partial indexes (WHERE clauses) are enforced by PostgreSQL
+// and defined in Hasura migrations; they are not fully modeled here. Generate warning can be ignored.
+// To suppress: PRISMA_DISABLE_WARNINGS=true npx prisma generate
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model achievements {
+  appid             BigInt
+  achievements_code String
+  name              String
+  description       String
+  icon_unlocked     String
+  icon_locked       String
+  icon_unlocked_url String
+  icon_locked_url   String
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  is_hidden         Boolean             @default(false)
+  updated_at        DateTime            @default(now()) @db.Timestamptz(6)
+  games             games               @relation(fields: [appid], references: [appid], onUpdate: NoAction)
+  user_achievements user_achievements[]
+
+  @@id([appid, achievements_code])
+  @@index([appid], map: "idx_achievements_appid")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model games {
+  appid             BigInt              @id
+  name              String
+  developer         String?
+  publisher         String?
+  release_date      DateTime?           @db.Date
+  header_image      String?
+  is_free           Boolean             @default(false)
+  metadata          Json?
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime            @default(now()) @db.Timestamptz(6)
+  retired_at        DateTime?           @db.Timestamptz(6)
+  last_synced_at    DateTime?           @db.Timestamptz(6)
+  achievements      achievements[]
+  user_achievements user_achievements[]
+  user_games        user_games[]
+
+  @@index([retired_at], map: "idx_games_active")
+  @@index([retired_at], map: "idx_games_retired")
+}
+
+model playtime_events {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id             String?   @db.Uuid
+  appid               BigInt?
+  minutes_played      Int?
+  playtime_minutes    BigInt?
+  recorded_at         DateTime? @default(now()) @db.Timestamptz(6)
+  playtime_updated_at DateTime? @db.Timestamptz(6)
+}
+
+model sync_jobs {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  // DB has partial unique index idx_one_active_sync_per_user on user_id WHERE status IN ('pending','running')
+  user_id       String          @db.Uuid
+  job_type      sync_job_type
+  status        sync_job_status
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  attempts      Int             @default(0) @db.SmallInt
+  error_message String?
+  started_at    DateTime?       @db.Timestamptz(6)
+  completed_at  DateTime?       @db.Timestamptz(6)
+  users         users           @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([status], map: "idx_sync_jobs_pending")
+}
+
+model user_achievements {
+  user_id           String       @db.Uuid
+  appid             BigInt
+  achievements_code String
+  unlocked_at       DateTime     @default(now()) @db.Timestamptz(6)
+  unlock_progress   Int?         @db.SmallInt
+  updated_at        DateTime     @default(now()) @db.Timestamptz(6)
+  achievements      achievements @relation(fields: [appid, achievements_code], references: [appid, achievements_code], onUpdate: NoAction)
+  games             games        @relation(fields: [appid], references: [appid], onDelete: NoAction, onUpdate: NoAction)
+  users             users        @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([user_id, appid, achievements_code])
+  @@index([user_id, unlocked_at(sort: Desc)], map: "idx_recent_unlocks")
+  @@index([user_id, appid], map: "idx_user_achievements_lookup")
+  @@index([user_id], map: "idx_user_achievements_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model user_games {
+  user_id                        String    @db.Uuid
+  appid                          BigInt
+  owned_at                       DateTime  @default(now()) @db.Timestamptz(6)
+  playtime_minutes               BigInt    @default(0)
+  last_played_at                 DateTime? @db.Timestamptz(6)
+  completion_percentage          Int?      @db.SmallInt
+  total_achievements             Int       @default(0)
+  unlocked_achievements          Int       @default(0)
+  is_favorite                    Boolean   @default(false)
+  is_hidden                      Boolean   @default(false)
+  created_at                     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                     DateTime  @default(now()) @db.Timestamptz(6)
+  last_unlocked_achievement_code String?
+  last_unlocked_achievement_at   DateTime? @db.Timestamptz(6)
+  source                         String?   @default("steam")
+  games                          games     @relation(fields: [appid], references: [appid], onUpdate: NoAction)
+  users                          users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([user_id, appid])
+  @@index([appid], map: "idx_user_games_appid")
+  @@index([user_id], map: "idx_user_games_favorites")
+  @@index([last_played_at(sort: Desc)], map: "idx_user_games_last_played")
+  @@index([user_id, last_played_at(sort: Desc)], map: "idx_user_games_recent")
+  @@index([user_id, last_played_at(sort: Desc)], map: "idx_user_games_user_last_played")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model user_sessions {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id            String    @db.Uuid
+  refresh_token_hash String    @unique
+  ip_address         String?   @db.Inet
+  device_id          String
+  created_at         DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime  @default(now()) @db.Timestamptz(6)
+  last_used_at       DateTime? @default(now()) @db.Timestamptz(6)
+  expires_at         DateTime  @db.Timestamptz(6)
+  user_agent         String?
+  revoked_at         DateTime? @db.Timestamptz(6)
+  users              users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, device_id], map: "unique_user_device_session")
+  @@index([user_id], map: "idx_active_sessions")
+  @@index([expires_at], map: "idx_sessions_expiry")
+  @@index([last_used_at], map: "idx_sessions_last_used")
+  @@index([user_id], map: "idx_sessions_user")
+}
+
+model user_sync_status {
+  user_id                 String    @id @db.Uuid
+  last_synced_at          DateTime? @db.Timestamptz(6)
+  last_successful_sync_at DateTime? @db.Timestamptz(6)
+  sync_in_progress        Boolean?  @default(false)
+  manual_sync_used        Boolean?  @default(false)
+  manual_sync_reset_at    DateTime? @db.Timestamptz(6)
+  last_error              String?
+  users                   users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([last_successful_sync_at], map: "idx_sync_due_users")
+  @@index([last_synced_at], map: "idx_user_sync_status_last_synced")
+}
+
+model users {
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email             String?             @unique
+  password_hash     String?
+  username          String?             @unique
+  provider          auth_provider
+  provider_id       String
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime            @default(now()) @db.Timestamptz(6)
+  sync_jobs         sync_jobs[]
+  user_achievements user_achievements[]
+  user_games        user_games[]
+  user_sessions     user_sessions[]
+  user_sync_status  user_sync_status?
+
+  @@unique([provider, provider_id], map: "users_provider_identity_unique")
+  @@index([provider], map: "idx_users_provider")
+}
+
+enum auth_provider {
+  email
+  google
+  steam
+}
+
+enum sync_job_status {
+  pending
+  running
+  success
+  failed
+}
+
+enum sync_job_type {
+  full_sync
+  achievements_only
+}

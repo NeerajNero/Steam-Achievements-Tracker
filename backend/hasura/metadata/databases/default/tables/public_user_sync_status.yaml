@@ -1,0 +1,3 @@
+table:
+  name: user_sync_status
+  schema: public

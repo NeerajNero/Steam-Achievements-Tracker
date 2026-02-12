@@ -1,0 +1,1 @@
+DROP TABLE playtime_events;

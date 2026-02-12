@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "generate": "PRISMA_DISABLE_WARNINGS=true prisma generate"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.11",
+    "prisma": "^7.4.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.4.0",
+    "dotenv": "^17.2.4"
+  }
+}
