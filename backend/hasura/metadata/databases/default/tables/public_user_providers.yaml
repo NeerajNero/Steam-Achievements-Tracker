@@ -1,5 +1,5 @@
 table:
-  name: sync_jobs
+  name: user_providers
   schema: public
 object_relationships:
   - name: user

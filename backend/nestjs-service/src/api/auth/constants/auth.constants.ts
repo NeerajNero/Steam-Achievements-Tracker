@@ -14,3 +14,8 @@ export const COOKIE = {
 export const JWT = {
   DEFAULT_ACCESS_EXPIRES_IN: '15m',
 } as const;
+
+/** Frontend base URL for redirects (e.g. dashboard after Steam link). */
+export const FRONTEND = {
+  DEFAULT_DASHBOARD_PATH: '/dashboard',
+} as const;

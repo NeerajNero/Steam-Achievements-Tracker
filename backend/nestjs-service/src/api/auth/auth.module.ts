@@ -5,6 +5,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { RegisterRepository } from '../db/prisma/register/register.repository';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { SteamStrategy } from './strategies/steam.strategy';
 
 @Module({
   imports: [
@@ -20,7 +22,7 @@ import { RegisterRepository } from '../db/prisma/register/register.repository';
       }),
     }),
   ],
-  providers: [AuthService, RegisterRepository],
+  providers: [AuthService, RegisterRepository, JwtStrategy, SteamStrategy],
   controllers: [AuthController],
   exports: [AuthService],
 })

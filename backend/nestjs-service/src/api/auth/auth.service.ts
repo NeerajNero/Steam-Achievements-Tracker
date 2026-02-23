@@ -87,6 +87,36 @@ export class AuthService {
     return { message: 'Logged out successfully' };
   }
 
+  /**
+   * Create session and return tokens for a user (e.g. after Steam login/link).
+   */
+  async createSessionForUser(userId: string): Promise<AuthResponseDto> {
+    const user = await this.registerRepository.findUserById(userId);
+    if (!user) throw new UnauthorizedException('User not found');
+    const accessToken = await this.generateAccessToken(user.id);
+    const refreshToken = this.generateRefreshToken();
+    const refreshTokenHash = await bcrypt.hash(refreshToken, AUTH.BCRYPT_ROUNDS);
+    await this.registerRepository.createUserSession(user.id, refreshTokenHash);
+    return {
+      user: { id: user.id, email: user.email },
+      status: 'success',
+      tokens: { accessToken, refreshToken, refreshTokenHash },
+    };
+  }
+
+  /**
+   * Handle Steam callback: link (if logged in) or login by steamId. Returns user + tokens or null if no account linked.
+   */
+  async handleSteamCallback(steamId: string, linkedUserId?: string): Promise<AuthResponseDto | null> {
+    if (linkedUserId) {
+      await this.registerRepository.linkSteamToUser(linkedUserId, steamId);
+      return this.createSessionForUser(linkedUserId);
+    }
+    const user = await this.registerRepository.findUserBySteamId(steamId);
+    if (!user) return null;
+    return this.createSessionForUser(user.id);
+  }
+
   private async generateAccessToken(userId: string) {
     const secret = process.env.JWT_ACCESS_SECRET;
     const expiresIn = process.env.JWT_ACCESS_EXPIRES_IN ?? JWT.DEFAULT_ACCESS_EXPIRES_IN;
