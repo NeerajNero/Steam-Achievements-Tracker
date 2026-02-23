@@ -93,7 +93,8 @@ export class AuthService {
     if (!secret) throw new Error('JWT_ACCESS_SECRET is not set');
     return this.jwtService.signAsync(
       { sub: userId },
-      { secret, expiresIn },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { secret, expiresIn } as any,
     );
   }
 
