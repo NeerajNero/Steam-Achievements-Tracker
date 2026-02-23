@@ -7,6 +7,8 @@ import { AuthController } from './auth.controller';
 import { RegisterRepository } from '../db/prisma/register/register.repository';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { SteamStrategy } from './strategies/steam.strategy';
+import { SteamLinkStrategy } from './strategies/steam-link.strategy';
+import { SteamApiService } from './steam/steam-api.service';
 
 @Module({
   imports: [
@@ -22,7 +24,7 @@ import { SteamStrategy } from './strategies/steam.strategy';
       }),
     }),
   ],
-  providers: [AuthService, RegisterRepository, JwtStrategy, SteamStrategy],
+  providers: [AuthService, RegisterRepository, JwtStrategy, SteamStrategy, SteamLinkStrategy, SteamApiService],
   controllers: [AuthController],
   exports: [AuthService],
 })

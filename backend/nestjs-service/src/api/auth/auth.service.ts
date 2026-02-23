@@ -1,9 +1,10 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import { RegisterAndLoginDto, AuthResponseDto, CreateUserDto } from './dto/auth.dto';
 import { RegisterRepository } from '../db/prisma/register/register.repository';
+import { SteamApiService, SteamStatsDto } from './steam/steam-api.service';
 import { AUTH, JWT } from './constants/auth.constants';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class AuthService {
   constructor(
     private readonly registerRepository: RegisterRepository,
     private readonly jwtService: JwtService,
+    private readonly steamApiService: SteamApiService,
   ) {}
 
   async register(dto: RegisterAndLoginDto): Promise<AuthResponseDto> {
@@ -102,6 +104,17 @@ export class AuthService {
       status: 'success',
       tokens: { accessToken, refreshToken, refreshTokenHash },
     };
+  }
+
+  /**
+   * Fetch Steam stats (profile + owned games) for the current user. Requires Steam to be linked.
+   */
+  async getSteamStats(userId: string): Promise<SteamStatsDto> {
+    const steamId = await this.registerRepository.findSteamIdByUserId(userId);
+    if (!steamId) {
+      throw new BadRequestException('Steam account is not linked. Link Steam first via GET /auth/steam/link');
+    }
+    return this.steamApiService.getStats(steamId);
   }
 
   /**

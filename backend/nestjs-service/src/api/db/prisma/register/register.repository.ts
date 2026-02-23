@@ -76,7 +76,7 @@ export class RegisterRepository {
   }
 
   async linkSteamToUser(userId: string, steamId: string) {
-    return this.prisma.user_providers.upsert({
+    const link = await this.prisma.user_providers.upsert({
       where: {
         user_id_provider: { user_id: userId, provider: 'steam' },
       },
@@ -86,6 +86,15 @@ export class RegisterRepository {
         provider_id: steamId,
       },
       update: { provider_id: steamId },
+    });
+    await this.updateUserProvider(userId, 'steam', steamId);
+    return link;
+  }
+
+  async updateUserProvider(userId: string, provider: 'email' | 'google' | 'steam', providerId: string) {
+    return this.prisma.users.update({
+      where: { id: userId },
+      data: { provider, provider_id: providerId },
     });
   }
 
@@ -97,5 +106,19 @@ export class RegisterRepository {
       include: { users: true },
     });
     return link?.users ?? null;
+  }
+
+  /** Returns the Steam ID for the user if they have Steam linked (from users or user_providers). */
+  async findSteamIdByUserId(userId: string): Promise<string | null> {
+    const user = await this.prisma.users.findUnique({
+      where: { id: userId },
+      select: { provider: true, provider_id: true },
+    });
+    if (user?.provider === 'steam') return user.provider_id;
+    const link = await this.prisma.user_providers.findUnique({
+      where: { user_id_provider: { user_id: userId, provider: 'steam' } },
+      select: { provider_id: true },
+    });
+    return link?.provider_id ?? null;
   }
 }
