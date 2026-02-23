@@ -1,3 +1,10 @@
 table:
   name: user_games
   schema: public
+object_relationships:
+  - name: game
+    using:
+      foreign_key_constraint_on: appid
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id

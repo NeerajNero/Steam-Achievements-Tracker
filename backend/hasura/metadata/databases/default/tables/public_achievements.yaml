@@ -1,3 +1,18 @@
 table:
   name: achievements
   schema: public
+object_relationships:
+  - name: game
+    using:
+      foreign_key_constraint_on: appid
+array_relationships:
+  - name: user_achievements
+    using:
+      manual_configuration:
+        column_mapping:
+          achievements_code: achievements_code
+          appid: appid
+        insertion_order: null
+        remote_table:
+          name: user_achievements
+          schema: public

@@ -4,6 +4,7 @@
 - "!include public_sync_jobs.yaml"
 - "!include public_user_achievements.yaml"
 - "!include public_user_games.yaml"
+- "!include public_user_providers.yaml"
 - "!include public_user_sessions.yaml"
 - "!include public_user_sync_status.yaml"
 - "!include public_users.yaml"

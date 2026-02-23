@@ -1,3 +1,47 @@
 table:
   name: users
   schema: public
+object_relationships:
+  - name: user_sync_status
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: user_sync_status
+          schema: public
+array_relationships:
+  - name: sync_jobs
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: sync_jobs
+          schema: public
+  - name: user_achievements
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: user_achievements
+          schema: public
+  - name: user_games
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: user_games
+          schema: public
+  - name: user_providers
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: user_providers
+          schema: public
+  - name: user_sessions
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: user_sessions
+          schema: public

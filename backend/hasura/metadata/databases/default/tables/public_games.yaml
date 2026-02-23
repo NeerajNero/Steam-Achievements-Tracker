@@ -1,3 +1,25 @@
 table:
   name: games
   schema: public
+array_relationships:
+  - name: achievements
+    using:
+      foreign_key_constraint_on:
+        column: appid
+        table:
+          name: achievements
+          schema: public
+  - name: user_achievements
+    using:
+      foreign_key_constraint_on:
+        column: appid
+        table:
+          name: user_achievements
+          schema: public
+  - name: user_games
+    using:
+      foreign_key_constraint_on:
+        column: appid
+        table:
+          name: user_games
+          schema: public

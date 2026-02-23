@@ -157,6 +157,19 @@ model user_sync_status {
   @@index([last_synced_at], map: "idx_user_sync_status_last_synced")
 }
 
+model user_providers {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @db.Uuid
+  provider   String
+  provider_id String
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([provider, provider_id], map: "user_providers_provider_identity_unique")
+  @@unique([user_id, provider], map: "user_providers_user_provider_unique")
+  @@index([user_id], map: "idx_user_providers_user_id")
+}
+
 model users {
   id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email             String?             @unique
@@ -171,6 +184,7 @@ model users {
   user_games        user_games[]
   user_sessions     user_sessions[]
   user_sync_status  user_sync_status?
+  user_providers    user_providers[]
 
   @@unique([provider, provider_id], map: "users_provider_identity_unique")
   @@index([provider], map: "idx_users_provider")
