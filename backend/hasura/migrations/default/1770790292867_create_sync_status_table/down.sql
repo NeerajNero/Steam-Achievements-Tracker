@@ -1,1 +1,1 @@
-DROP TABLE user_sync_status;
+DROP TABLE IF EXISTS public.user_sync_status;

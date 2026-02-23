@@ -1,1 +1,1 @@
-DROP TABLE playtime_events;
+DROP TABLE IF EXISTS public.playtime_events;

@@ -1,4 +1,4 @@
-CREATE TABLE playtime_events (
+CREATE TABLE public.playtime_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID,
     appid BIGINT,

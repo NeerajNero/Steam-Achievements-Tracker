@@ -1,5 +1,5 @@
-CREATE TABLE user_sync_status (
-    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+CREATE TABLE public.user_sync_status (
+    user_id UUID PRIMARY KEY REFERENCES public.users(id) ON DELETE CASCADE,
     last_synced_at TIMESTAMPTZ,
     last_successful_sync_at TIMESTAMPTZ,
     sync_in_progress BOOLEAN DEFAULT FALSE,
