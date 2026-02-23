@@ -1,1 +1,1 @@
-DROP TABLE public.user_games;
+DROP TABLE IF EXISTS public.user_games;

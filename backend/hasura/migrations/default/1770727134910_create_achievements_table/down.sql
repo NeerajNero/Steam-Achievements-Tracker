@@ -1,1 +1,1 @@
-DROP TABLE public.achievements;
+DROP TABLE IF EXISTS public.achievements;
