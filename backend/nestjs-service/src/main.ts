@@ -15,7 +15,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('GamePulse API')
-    .setDescription('API for GamePulse – auth and core services')
+    .setDescription('API for GamePulse – auth and core services - pending')
     .setVersion('1.0')
     .addTag('auth', 'Registration, login, logout')
     .build();
